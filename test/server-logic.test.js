@@ -109,6 +109,7 @@ const states = new Map(Object.entries({
   'light.b': { state: 'off', attributes: {} },
   'light.c': { state: 'unavailable', attributes: {} },
   'light.group': { state: 'on', attributes: { entity_id: ['light.a', 'light.b'] } },
+  'switch.kitchen': { state: 'on', attributes: {} },
   'scene.evening': { state: '2026-10-03T12:00:00+00:00' },
   'scene.movie': { state: '2026-10-02T12:00:00+00:00' },
   'scene.never': { state: 'unknown' },
@@ -133,6 +134,11 @@ test('houseExceptions lists only off-normal entities', () => {
 test('lightCount skips groups and unavailable lights', () => {
   assert.deepEqual(lightCount(null, states), { on: 1, total: 2 });
   assert.deepEqual(lightCount(['light.b'], states), { on: 0, total: 1 });
+});
+
+test('lightCount: switches count only when listed', () => {
+  assert.deepEqual(lightCount(['switch.kitchen', 'light.b'], states), { on: 1, total: 2 });
+  assert.deepEqual(lightCount(null, states).total, 2);
 });
 
 test('sceneList marks the most recently activated scene', () => {

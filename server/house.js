@@ -34,13 +34,15 @@ export function stateLabel(item, state) {
   return state.charAt(0).toUpperCase() + state.slice(1).replace(/_/g, ' ');
 }
 
-/** "N of M lights on". `lights` null means every light.* entity HA knows about. */
+/**
+ * "N of M lights on". `lights` null means every light.* entity HA knows
+ * about; an explicit list may also name switch.* entities (wall switches).
+ */
 export function lightCount(lights, states) {
   let on = 0;
   let total = 0;
   for (const [id, st] of states) {
-    if (!id.startsWith('light.')) continue;
-    if (lights && !lights.includes(id)) continue;
+    if (lights ? !lights.includes(id) : !id.startsWith('light.')) continue;
     if (st.state === 'unavailable' || st.state === 'unknown') continue;
     if (st.attributes && Array.isArray(st.attributes.entity_id)) continue; // light groups
     total++;
