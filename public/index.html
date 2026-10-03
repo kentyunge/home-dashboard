@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0F1318">
+<title>Home</title>
+<link rel="preload" href="fonts/outfit-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<div id="shift">
+
+  <main id="day" class="day" aria-label="Day view">
+    <section class="col col-now">
+      <div class="clock-block">
+        <div class="clock"><span id="clock-time" class="clock-time">--:--</span><span id="clock-ampm" class="clock-ampm"></span></div>
+        <div id="clock-date" class="clock-date"></div>
+      </div>
+      <div id="weather" class="card weather"></div>
+      <div id="home" class="card home"></div>
+    </section>
+
+    <section class="col col-agenda panel" aria-label="Agenda">
+      <header class="agenda-head">
+        <h1 class="h-title">This week</h1>
+        <span id="agenda-range" class="muted"></span>
+      </header>
+      <div id="chips" class="chips" role="group" aria-label="Calendars"></div>
+      <div id="agenda" class="agenda"></div>
+    </section>
+
+    <section class="col col-detail">
+      <article id="detail" class="card detail" aria-live="polite"></article>
+      <div id="headsup" class="card headsup"></div>
+    </section>
+  </main>
+
+  <main id="night" class="night" aria-label="Night view" hidden>
+    <div class="night-top"><span id="night-date"></span><span id="night-weather"></span></div>
+    <div class="night-clock">
+      <div id="night-time" class="night-time">--:--</div>
+      <div id="night-ampm" class="night-ampm"></div>
+    </div>
+    <div id="night-info" class="night-info"></div>
+  </main>
+
+</div>
+<div id="status" class="status" hidden></div>
+</body>
+</html>

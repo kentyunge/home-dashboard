@@ -1,0 +1,16 @@
+{
+  "name": "home-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Wall-mounted household dashboard fed by Home Assistant",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "MOCK=1 node --watch server/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,43 @@
+{
+  "agendaDays": 7,
+  "clock24h": false,
+
+  "calendars": [
+    { "entity": "calendar.family", "name": "Family", "color": "#7FB2FF" },
+    { "entity": "calendar.kent_work", "name": "Kent", "color": "#C9A0FF", "busyOnly": true },
+    { "entity": "calendar.kids_activities", "name": "Kids' activities", "color": "#FF9A5C" },
+    { "entity": "calendar.school", "name": "School", "color": "#4FD1B5" },
+    { "entity": "calendar.golf_league", "name": "Golf league", "color": "#9BD86A" },
+    { "entity": "calendar.home_bins", "name": "Home & bins", "color": "#A3ADBA", "headsUp": true }
+  ],
+
+  "weather": { "entity": "weather.home" },
+
+  "scenes": [
+    { "entity": "scene.all_off", "name": "All off" },
+    { "entity": "scene.evening", "name": "Evening" },
+    { "entity": "scene.movie", "name": "Movie" },
+    { "entity": "scene.morning", "name": "Morning" }
+  ],
+
+  "lights": null,
+
+  "house": [
+    { "entity": "lock.front_door", "name": "Front door", "normal": "locked" },
+    { "entity": "cover.garage_door", "name": "Garage", "normal": "closed" },
+    { "entity": "binary_sensor.back_door", "name": "Back door", "normal": "off" }
+  ],
+
+  "climate": { "entity": "climate.thermostat", "name": "Thermostat" },
+
+  "display": {
+    "nightStart": "22:00",
+    "nightEnd": "06:30",
+    "wakeMinutes": 2,
+    "idleMinutes": 5,
+    "brightnessDay": 180,
+    "brightnessNight": 8,
+    "screenOffAfterMinutes": null,
+    "pixelShift": true
+  }
+}
