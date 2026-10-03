@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeEvent, cleanText, sortEvents } from '../server/calendar.js';
 import { headsUp, buildWeather } from '../server/weather.js';
-import { houseExceptions, lightCount, sceneList, climateSummary } from '../server/house.js';
+import { houseExceptions, lightCount, sceneList, climateSummary, applianceStatus, finishTime } from '../server/house.js';
 
 const cal = { entity: 'calendar.family', name: 'Family', color: '#7FB2FF', busyOnly: false };
 
@@ -154,4 +154,40 @@ test('sceneList marks the most recently activated scene', () => {
 test('climateSummary rounds temperatures', () => {
   assert.deepEqual(climateSummary({ entity: 'climate.t', name: 'Thermostat' }, states),
     { name: 'Thermostat', mode: 'heat', action: 'heating', current: 68, target: 70 });
+});
+
+test('finishTime: timestamp, numeric duration with units, and H:MM[:SS] strings', () => {
+  const now = new Date('2026-10-03T14:00:00Z');
+  const upd = '2026-10-03T13:55:00Z';
+  assert.equal(finishTime({ state: '2026-10-03T14:40:00+00:00', attributes: { device_class: 'timestamp' } }, now).toISOString(), '2026-10-03T14:40:00.000Z');
+  // Duration counts from the sensor's last update, not from "now".
+  assert.equal(finishTime({ state: '23', attributes: { unit_of_measurement: 'min' }, last_updated: upd }, now).toISOString(), '2026-10-03T14:18:00.000Z');
+  assert.equal(finishTime({ state: '0.5', attributes: { unit_of_measurement: 'h' }, last_updated: upd }, now).toISOString(), '2026-10-03T14:25:00.000Z');
+  assert.equal(finishTime({ state: '1:05', attributes: {}, last_updated: upd }, now).toISOString(), '2026-10-03T15:00:00.000Z');
+  assert.equal(finishTime({ state: '0:10:30', attributes: {}, last_updated: upd }, now).toISOString(), '2026-10-03T14:05:30.000Z');
+  assert.equal(finishTime({ state: '0', attributes: {} }, now), null);
+  assert.equal(finishTime({ state: 'unavailable', attributes: {} }, now), null);
+});
+
+test('applianceStatus: shows only running appliances', () => {
+  const now = new Date('2026-10-03T14:00:00Z');
+  const st = new Map(Object.entries({
+    'sensor.dryer_state': { state: 'run' },
+    'sensor.dryer_remaining': { state: '20', attributes: { unit_of_measurement: 'min' }, last_updated: '2026-10-03T14:00:00Z' },
+    'sensor.washer_state': { state: 'finished' },
+    'sensor.washer_remaining': { state: '0', attributes: {} },
+    'sensor.dish_done_at': { state: '2026-10-03T15:00:00+00:00', attributes: { device_class: 'timestamp' } },
+    'sensor.oven': { state: 'Baking' },
+  }));
+  const out = applianceStatus([
+    { name: 'Dryer', state: 'sensor.dryer_state', remaining: 'sensor.dryer_remaining' },
+    { name: 'Washer', state: 'sensor.washer_state', remaining: 'sensor.washer_remaining' },
+    { name: 'Dishwasher', state: null, remaining: 'sensor.dish_done_at' },
+    { name: 'Oven', state: 'sensor.oven', runningStates: ['baking'], remaining: null },
+  ], st, now);
+  assert.deepEqual(out, [
+    { name: 'Dryer', finishesAt: '2026-10-03T14:20:00.000Z' },
+    { name: 'Dishwasher', finishesAt: '2026-10-03T15:00:00.000Z' },
+    { name: 'Oven', finishesAt: null },
+  ]);
 });

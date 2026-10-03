@@ -79,6 +79,8 @@ test('WebSocket: auth, subscribe, state events, reconnect status', () => {
   ws.receive({ type: 'auth_ok' });
   assert.equal(ws.sent[1].type, 'subscribe_events');
   assert.equal(ws.sent[1].event_type, 'state_changed');
+  assert.deepEqual(status, []); // not live until HA confirms
+  ws.receive({ type: 'result', id: ws.sent[1].id, success: true });
   assert.deepEqual(status, [true]);
 
   ws.receive({ type: 'event', event: { event_type: 'state_changed', data: { entity_id: 'lock.front', new_state: { state: 'unlocked' } } } });
@@ -100,4 +102,18 @@ test('WebSocket: a failed handshake does not recurse (error → close → error)
   ws.dispatchEvent(new Event('error'));
   ws.close();
   assert.equal(ha.ws, null);
+});
+
+test('WebSocket: a refused subscription is logged and never reported as live', () => {
+  const errors = [];
+  const ha = new HomeAssistant({ url: 'http://ha:8123', token: 'tok', WebSocketImpl: FakeWebSocket, log: { ...quiet, error: (m) => errors.push(m) } });
+  const status = [];
+  ha.connect({ onState() {}, onStatus: (up) => status.push(up) });
+  const ws = FakeWebSocket.last;
+  ws.receive({ type: 'auth_required' });
+  ws.receive({ type: 'auth_ok' });
+  ws.receive({ type: 'result', id: ws.sent[1].id, success: false, error: { code: 'unauthorized', message: 'Unauthorized' } });
+  assert.deepEqual(status, []);
+  assert.equal(ha.connected, false);
+  assert.match(errors[0], /unauthorized/);
 });

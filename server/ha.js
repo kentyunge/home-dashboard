@@ -65,13 +65,14 @@ export class HomeAssistant {
    */
   connect({ onState, onStatus }) {
     if (!this.WebSocket) {
-      this.log.warn('No WebSocket implementation available; live updates disabled');
+      this.log.warn(`No global WebSocket in Node ${process.version} (needs Node 22.4+); live updates off, polling instead`);
       return;
     }
     const wsUrl = this.url.replace(/^http/, 'ws') + '/api/websocket';
     const ws = new this.WebSocket(wsUrl);
     this.ws = ws;
     let nextId = 1;
+    let subscribeId = null;
 
     ws.addEventListener('message', (ev) => {
       let msg;
@@ -83,10 +84,19 @@ export class HomeAssistant {
       if (msg.type === 'auth_required') {
         ws.send(JSON.stringify({ type: 'auth', access_token: this.token }));
       } else if (msg.type === 'auth_ok') {
-        ws.send(JSON.stringify({ id: nextId++, type: 'subscribe_events', event_type: 'state_changed' }));
-        this.connected = true;
-        this.retryMs = 1000;
-        onStatus(true);
+        subscribeId = nextId++;
+        ws.send(JSON.stringify({ id: subscribeId, type: 'subscribe_events', event_type: 'state_changed' }));
+      } else if (msg.type === 'result' && msg.id === subscribeId) {
+        // Only live once HA confirms the subscription; a refusal would otherwise go unnoticed.
+        if (msg.success) {
+          this.connected = true;
+          this.retryMs = 1000;
+          this.log.log('HA WebSocket connected; live updates on');
+          onStatus(true);
+        } else {
+          const e = msg.error || {};
+          this.log.error(`HA refused the state_changed subscription (${e.code}: ${e.message}); polling instead`);
+        }
       } else if (msg.type === 'auth_invalid') {
         this.log.error('HA WebSocket auth rejected — check HA_TOKEN');
         ws.close();
