@@ -6,6 +6,7 @@ const CALENDAR_REFRESH_MS = 5 * 60e3;
 const FORECAST_REFRESH_MS = 30 * 60e3;
 const FORECAST_MIN_GAP_MS = 10 * 60e3;
 const EMIT_DEBOUNCE_MS = 400;
+const POLL_STATES_MS = 30e3; // only while the WebSocket isn't delivering live updates
 
 /**
  * Keeps the latest HA data in memory and turns it into one snapshot the
@@ -57,6 +58,7 @@ export class Store {
     await Promise.all([this.refreshStates(), this.refreshCalendars(), this.refreshForecast()]);
     this.timers.push(setInterval(() => this.refreshCalendars(), CALENDAR_REFRESH_MS));
     this.timers.push(setInterval(() => this.refreshForecast(), FORECAST_REFRESH_MS));
+    this.timers.push(setInterval(() => { if (!this.connected) this.refreshStates(); }, POLL_STATES_MS));
     for (const t of this.timers) t.unref?.();
   }
 

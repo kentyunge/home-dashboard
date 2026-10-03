@@ -379,7 +379,7 @@ function renderStatus() {
     const at = snap && snap.generatedAt ? ` · updated ${fmtTime(new Date(snap.generatedAt), snap.settings.clock24h)}` : '';
     text = `Reconnecting${at}`;
   } else if (snap && !snap.mock && !snap.connected) {
-    text = 'Home Assistant offline';
+    text = 'Live updates off';
   } else if (snap && snap.mock) {
     text = 'Demo data';
   }
