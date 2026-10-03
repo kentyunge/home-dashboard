@@ -66,7 +66,7 @@ Testing switches:
 - `calendars[]`: `entity`, `name`, `color`, optional `busyOnly`, `headsUp`
 - `weather.entity`
 - `scenes[]`: `entity` (must be `scene.*`), `name`
-- `lights`: `null` counts every `light.*` entity (light groups are skipped); or give an explicit list
+- `lights`: `null` counts every `light.*` entity (light groups are skipped); or give an explicit list, which may include `switch.*` entities for smart wall switches
 - `house[]`: `entity`, `name`, `normal` (state or list of states), optional `labels` (`{"on": "Open"}`)
 - `climate`: `entity`, `name`
 - `display`: `nightStart`, `nightEnd`, `wakeMinutes`, `idleMinutes`, `brightnessDay`/`brightnessNight` (0–255), `screenOffAfterMinutes` (null = never), `pixelShift`

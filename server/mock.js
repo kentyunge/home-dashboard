@@ -142,7 +142,7 @@ export class MockHomeAssistant {
     const now = this.now().toISOString();
     this.update(entity, now);
     const idx = this.config.scenes.findIndex((s) => s.entity === entity);
-    const lights = [...this.states.keys()].filter((id) => id.startsWith('light.'));
+    const lights = this.config.lights || [...this.states.keys()].filter((id) => id.startsWith('light.'));
     const onCount = idx === 0 ? 0 : Math.min(lights.length, 2 + idx * 2);
     lights.forEach((id, i) => this.update(id, i < onCount ? 'on' : 'off'));
   }
