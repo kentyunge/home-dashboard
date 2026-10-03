@@ -170,6 +170,7 @@ function renderHome({ snap }) {
       : c.current != null ? `${c.current}°` : c.mode;
     rows.push(statusRow(c.name, value, 'ok'));
   }
+  for (const a of snap.appliances || []) rows.push(statusRow(a.name, applianceText(a, new Date()), 'run'));
   for (const x of snap.house) rows.push(statusRow(x.name, x.label, 'warn'));
   if (!snap.house.length && snap.houseTotal) rows.push(statusRow('Doors & locks', 'All secure', 'ok'));
 
@@ -191,6 +192,16 @@ function renderHome({ snap }) {
         return h('button', { type: 'button', class: cls.join(' '), onclick: () => activateScene(s.entity) }, s.name);
       })),
   );
+}
+
+/** "Done in 23 min", "Done in 1 hr 5 min", "Finishing", or "Running" when no time is known. */
+function applianceText(a, now) {
+  if (!a.finishesAt) return 'Running';
+  const mins = Math.ceil((new Date(a.finishesAt) - now) / 60e3);
+  if (mins <= 0) return 'Finishing';
+  if (mins < 60) return `Done in ${mins} min`;
+  const rem = mins % 60;
+  return `Done in ${Math.floor(mins / 60)} hr${rem ? ` ${rem} min` : ''}`;
 }
 
 function statusRow(name, value, tone) {
@@ -366,6 +377,7 @@ function renderNight(ctx) {
       ? [h('span', { class: 'warn' }, `${ex[0].name} ${ex[0].label.toLowerCase()}`),
         h('span', null, ex.length > 1 ? `+${ex.length - 1} more · tap to see` : 'Tap to see')]
       : h('span', { class: 'hl' }, snap.houseTotal ? 'All secure' : ''),
+    (snap.appliances || []).map((a) => h('span', null, `${a.name} · ${applianceText(a, now).toLowerCase()}`)),
     snap.lights.total > 0 && h('span', null, snap.lights.on ? `${snap.lights.on} lights on` : 'Lights off'));
 
   replace($('night-info'), nextCol, midCol, houseCol);

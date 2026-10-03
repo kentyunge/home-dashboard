@@ -90,6 +90,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .status-row .k { color: var(--text-2); }
 .status-row .warn { color: var(--amber-text); }
 .status-row .ok { color: var(--text); }
+.status-row .run { color: #4FD1B5; }
 .scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto; }
 .scene {
   min-height: 52px;

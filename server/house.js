@@ -80,3 +80,58 @@ export function sceneList(scenes, states) {
   });
   return { list, current: latest ? latest.entity : null };
 }
+
+// States that mean "not running" across the common washer/dryer integrations.
+const IDLE_STATES = ['off', 'idle', 'stop', 'stopped', 'end', 'finished', 'finish', 'complete', 'completed',
+  'ready', 'standby', 'none', 'pause', 'paused', 'unavailable', 'unknown', '0', 'false'];
+
+/**
+ * Appliances that are running right now, with when they'll finish.
+ *
+ * `remaining` may be a timestamp sensor (finish time, e.g. SmartThings
+ * "completion time"), a duration sensor (number + unit, e.g. 23 min), or an
+ * "H:MM[:SS]" string. Durations are counted from the sensor's last update so
+ * a stale reading still gives the right finish time. `state` (optional)
+ * decides whether it's running; without it, a future finish time does.
+ */
+export function applianceStatus(appliances, states, now = new Date()) {
+  const out = [];
+  for (const a of appliances) {
+    const st = a.state ? states.get(a.state) : null;
+    const rem = a.remaining ? states.get(a.remaining) : null;
+    const finishesAt = rem ? finishTime(rem, now) : null;
+
+    let running;
+    if (st) {
+      const v = String(st.state).toLowerCase();
+      running = a.runningStates ? a.runningStates.map((x) => String(x).toLowerCase()).includes(v) : !IDLE_STATES.includes(v);
+    } else {
+      running = !!finishesAt && finishesAt > now;
+    }
+    if (!running) continue;
+    out.push({ name: a.name, finishesAt: finishesAt && finishesAt > now ? finishesAt.toISOString() : null });
+  }
+  return out;
+}
+
+const UNIT_MS = { s: 1e3, sec: 1e3, min: 60e3, h: 3600e3, hr: 3600e3, d: 86400e3 };
+
+export function finishTime(st, now = new Date()) {
+  const raw = st.state;
+  if (raw == null || raw === 'unavailable' || raw === 'unknown' || raw === '') return null;
+  const a = st.attributes || {};
+  if (a.device_class === 'timestamp' || /^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+    const t = new Date(raw);
+    return Number.isNaN(t.getTime()) ? null : t;
+  }
+  let ms = null;
+  if (/^\d+:\d{1,2}(:\d{1,2})?$/.test(raw)) {
+    const p = raw.split(':').map(Number);
+    ms = p.length === 3 ? ((p[0] * 60 + p[1]) * 60 + p[2]) * 1e3 : (p[0] * 60 + p[1]) * 60e3;
+  } else if (!Number.isNaN(Number(raw))) {
+    ms = Number(raw) * (UNIT_MS[a.unit_of_measurement] || UNIT_MS.min);
+  }
+  if (ms == null || ms <= 0) return null;
+  const since = Date.parse(st.last_updated || st.last_changed || '') || now.getTime();
+  return new Date(since + ms);
+}

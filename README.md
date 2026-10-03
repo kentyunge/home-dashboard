@@ -69,6 +69,7 @@ Testing switches:
 - `lights`: `null` counts every `light.*` entity (light groups are skipped); or give an explicit list, which may include `switch.*` entities for smart wall switches
 - `house[]`: `entity`, `name`, `normal` (state or list of states), optional `labels` (`{"on": "Open"}`)
 - `climate`: `entity`, `name`
+- `appliances[]`: `name`, plus `remaining` (a finish-time timestamp sensor, a duration sensor such as minutes left, or an `H:MM` string) and/or `state` (the machine's run state). Optional `runningStates` lists the states that mean "running"; by default anything except off/idle/finished/etc. counts. Shown as "Done in 23 min" on the Home card and night view only while running
 - `display`: `nightStart`, `nightEnd`, `wakeMinutes`, `idleMinutes`, `brightnessDay`/`brightnessNight` (0–255), `screenOffAfterMinutes` (null = never), `pixelShift`
 - `agendaDays` (1–14), `clock24h`
 

@@ -77,6 +77,12 @@ export function loadConfig(env = process.env) {
       normal: [].concat(h.normal ?? []),
       labels: h.labels || {},
     })),
+    appliances: (file.appliances || []).map((a) => ({
+      name: required(a.name, 'appliances[].name'),
+      state: a.state || null,
+      runningStates: a.runningStates ? [].concat(a.runningStates) : null,
+      remaining: a.remaining || null,
+    })),
     climate: file.climate && file.climate.entity
       ? { entity: file.climate.entity, name: file.climate.name || 'Thermostat' }
       : null,

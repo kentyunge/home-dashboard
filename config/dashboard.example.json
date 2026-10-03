@@ -30,6 +30,10 @@
 
   "climate": { "entity": "climate.thermostat", "name": "Thermostat" },
 
+  "appliances": [
+    { "name": "Dryer", "state": "sensor.dryer_machine_state", "remaining": "sensor.dryer_remaining_time" }
+  ],
+
   "display": {
     "nightStart": "22:00",
     "nightEnd": "06:30",

@@ -1,6 +1,6 @@
 import { normalizeEvent, sortEvents } from './calendar.js';
 import { buildWeather } from './weather.js';
-import { houseExceptions, lightCount, climateSummary, sceneList } from './house.js';
+import { houseExceptions, lightCount, climateSummary, sceneList, applianceStatus } from './house.js';
 
 const CALENDAR_REFRESH_MS = 5 * 60e3;
 const FORECAST_REFRESH_MS = 30 * 60e3;
@@ -38,6 +38,7 @@ export class Store {
       ...config.house.map((h) => h.entity),
       ...(config.weather ? [config.weather.entity] : []),
       ...(config.climate ? [config.climate.entity] : []),
+      ...config.appliances.flatMap((a) => [a.state, a.remaining].filter(Boolean)),
       ...(config.lights || []),
     ]);
   }
@@ -191,6 +192,7 @@ export class Store {
       house: houseExceptions(c.house, this.states),
       houseTotal: c.house.length,
       climate: climateSummary(c.climate, this.states),
+      appliances: applianceStatus(c.appliances, this.states, now),
     };
   }
 }

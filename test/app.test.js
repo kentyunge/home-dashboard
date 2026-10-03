@@ -33,6 +33,8 @@ test('snapshot has calendars, events, weather, scenes, house', async () => {
   assert.ok(snap.weather && snap.weather.hourly.length === 5);
   assert.equal(snap.scenes.length, 4);
   assert.equal(snap.house.length, 1);
+  assert.equal(snap.appliances.length, 1);
+  assert.equal(snap.appliances[0].name, 'Dryer');
   assert.equal(snap.lights.total, 9);
   // busy-only calendar never leaks titles
   const work = snap.events.filter((e) => e.cal === 'calendar.kent_work');
