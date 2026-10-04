@@ -128,6 +128,15 @@ export function groupByDay(events, now, days) {
   return groups;
 }
 
+/**
+ * Events for the week agenda: calendars the viewer hasn't filtered out,
+ * minus heads-up calendars, which only appear in the Heads up card.
+ */
+export function agendaEvents(events, calendars, hidden) {
+  const shown = new Set(calendars.filter((c) => !c.headsUp && !hidden.has(c.id)).map((c) => c.id));
+  return events.filter((e) => shown.has(e.cal));
+}
+
 /** Start-time column in the agenda: "10:30 AM", "All day", or "Until 3 PM" for something already running. */
 export function agendaTime(ev, day, h24) {
   if (ev.allDay) return 'All day';

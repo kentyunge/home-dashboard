@@ -2,7 +2,7 @@ import { h, replace, svgIcon } from './dom.js';
 import { weatherIcon } from './icons.js';
 import { createDisplay } from './display.js';
 import {
-  addDays, agendaTime, clockParts, dayName, eventEnd, eventStart, fmtDateLong, fmtHour, fmtRange,
+  addDays, agendaEvents, agendaTime, clockParts, dayName, eventEnd, eventStart, fmtDateLong, fmtHour, fmtRange,
   fmtTime, fmtTimeShort, groupByDay, headsUpWhen, nextEvent, relLabel, startOfDay, whenLabel,
 } from './format.js';
 
@@ -117,7 +117,7 @@ function render() {
   const now = new Date();
   const h24 = snap.settings.clock24h;
   const cals = new Map(snap.calendars.map((c) => [c.id, c]));
-  const visible = snap.events.filter((e) => !state.hidden.has(e.cal) && cals.has(e.cal));
+  const visible = agendaEvents(snap.events, snap.calendars, state.hidden);
   const ctx = { snap, now, h24, cals, visible };
 
   if (document.body.classList.contains('is-night')) {
@@ -308,7 +308,7 @@ async function activateScene(entity) {
 }
 
 function renderChips({ snap }) {
-  replace($('chips'), snap.calendars.map((c) => {
+  replace($('chips'), snap.calendars.filter((c) => !c.headsUp).map((c) => {
     const on = !state.hidden.has(c.id);
     return h('button', {
       type: 'button',
