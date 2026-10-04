@@ -83,12 +83,23 @@ export function loadConfig(env = process.env) {
       runningStates: a.runningStates ? [].concat(a.runningStates) : null,
       remaining: a.remaining || null,
     })),
+    cameras: (file.cameras || []).map((c) => ({
+      entity: required(c.entity, 'cameras[].entity'),
+      name: c.name || c.entity,
+      triggers: [].concat(c.triggers || []),
+      popupSeconds: clampInt(c.popupSeconds, 10, 600, 60),
+    })),
     climate: file.climate && file.climate.entity
       ? { entity: file.climate.entity, name: file.climate.name || 'Thermostat' }
       : null,
     display: { ...DISPLAY_DEFAULTS, ...(file.display || {}) },
   };
 
+  for (const c of config.cameras) {
+    if (!c.entity.startsWith('camera.')) {
+      throw new Error(`Camera entity must be a camera.*: ${c.entity}`);
+    }
+  }
   for (const s of config.scenes) {
     if (!s.entity.startsWith('scene.')) {
       throw new Error(`Scene entity must be a scene.*: ${s.entity}`);

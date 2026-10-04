@@ -40,6 +40,14 @@ export function createApp({ config, store }) {
       if (url.pathname === '/api/stream' && req.method === 'GET') {
         return stream(req, res, store);
       }
+      const cam = url.pathname.match(/^\/api\/cameras\/(camera\.[a-z0-9_]+)\/snapshot$/);
+      if (cam && req.method === 'GET') {
+        const width = Math.min(3840, Math.max(160, Number.parseInt(url.searchParams.get('w'), 10) || 1280));
+        const img = await store.cameraSnapshot(cam[1], width);
+        res.writeHead(200, { 'Content-Type': img.type, 'Content-Length': img.body.length, 'Cache-Control': 'no-store' });
+        res.end(img.body);
+        return;
+      }
       const scene = url.pathname.match(/^\/api\/scenes\/(scene\.[a-z0-9_]+)$/);
       if (scene && req.method === 'POST') {
         await store.activateScene(scene[1]);

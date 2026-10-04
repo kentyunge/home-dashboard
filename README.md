@@ -25,6 +25,7 @@ Design mockups: https://claude.ai/code/artifact/ac29bb15-b397-4890-b2bc-3725fca7
 | House at a glance | Lists only what's off-normal (unlocked, open, offline), plus the thermostat. |
 | Heads up | Upcoming items (next 4 days) from calendars marked `"headsUp": true`, e.g. bins. |
 | Night / idle | Night window → dim ambient clock view; touch or motion wakes it for `wakeMinutes`. During the day, after `idleMinutes` the view resets to the next event. Brightness is set through Fully Kiosk. Pixel shift every hour. |
+| Cameras | Tap a camera button for a near-live view (stills every 2 s, scaled by HA). Optional triggers (doorbell, person, motion) pop the view open and wake the screen, even at night. |
 | Resilience | Keeps the last good data if HA or a calendar fails, shows a small "Reconnecting" / "Home Assistant offline" pill, and reloads itself when the server is redeployed. |
 
 ## Run it locally (no HA needed)
@@ -68,6 +69,7 @@ Testing switches:
 - `scenes[]`: `entity` (must be `scene.*`), `name`
 - `lights`: `null` counts every `light.*` entity (light groups are skipped); or give an explicit list, which may include `switch.*` entities for smart wall switches
 - `house[]`: `entity`, `name`, `normal` (state or list of states), optional `labels` (`{"on": "Open"}`)
+- `cameras[]`: `entity` (must be `camera.*`, e.g. UniFi Protect's `camera.east_garage_high_resolution_channel`), `name`, optional `triggers` (entity IDs that pop the view open: a `binary_sensor` turning on, e.g. person/motion detected, or an `event.*` doorbell ring) and `popupSeconds` (default 60). Each camera gets a button on the Home card that opens a view refreshing every 2 s; the server fetches the stills from HA (`/api/camera_proxy`), so the tablet never needs the HA token. A view opened by hand closes after 2 min
 - `climate`: `entity`, `name`
 - `appliances[]`: `name`, plus `remaining` (a finish-time timestamp sensor, a duration sensor such as minutes left, or an `H:MM` string) and/or `state` (the machine's run state). Optional `runningStates` lists the states that mean "running"; by default anything except off/idle/finished/etc. counts. Shown as "Done in 23 min" on the Home card and night view only while running
 - `display`: `nightStart`, `nightEnd`, `wakeMinutes`, `idleMinutes`, `brightnessDay`/`brightnessNight` (0–255), `screenOffAfterMinutes` (null = never), `pixelShift`

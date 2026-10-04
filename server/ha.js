@@ -54,6 +54,17 @@ export class HomeAssistant {
     return (entry && entry.forecast) || [];
   }
 
+  /** Current still from a camera, scaled by HA to `width` px. Returns { type, body } with body a Buffer. */
+  async cameraSnapshot(entity, width) {
+    const q = width ? `?width=${width}` : '';
+    const res = await this.fetch(`${this.url}/api/camera_proxy/${encodeURIComponent(entity)}${q}`, {
+      headers: { Authorization: `Bearer ${this.token}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error(`HA camera ${entity} → ${res.status}`);
+    return { type: res.headers.get('content-type') || 'image/jpeg', body: Buffer.from(await res.arrayBuffer()) };
+  }
+
   turnOnScene(entity) {
     return this.rest('POST', '/api/services/scene/turn_on', { entity_id: entity });
   }

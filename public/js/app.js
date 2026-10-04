@@ -1,4 +1,4 @@
-import { h, replace } from './dom.js';
+import { h, replace, svgIcon } from './dom.js';
 import { weatherIcon } from './icons.js';
 import { createDisplay } from './display.js';
 import {
@@ -8,6 +8,12 @@ import {
 
 const HIDDEN_KEY = 'dashboard.hiddenCalendars';
 const OFFLINE_AFTER_MS = 30e3;
+const CAMERA_REFRESH_MS = 2000;
+const CAMERA_MANUAL_CLOSE_MS = 120e3; // a view someone opened closes itself after 2 min
+const CAMERA_ICON = [
+  ['path', { d: 'M3 7.5A1.5 1.5 0 0 1 4.5 6h2l1.5-2h8l1.5 2h2A1.5 1.5 0 0 1 21 7.5v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z', stroke: 'currentColor' }],
+  ['circle', { cx: 12, cy: 12.5, r: 3.5, stroke: 'currentColor' }],
+];
 
 const state = {
   snap: null,
@@ -17,6 +23,8 @@ const state = {
   sceneError: null,
   streamDownSince: null,
   display: null,
+  camera: null, // { entity, refreshTimer, closeTimer }
+  seenAlerts: new Set(),
 };
 
 const $ = (id) => document.getElementById(id);
@@ -67,6 +75,7 @@ function applySnapshot(snap) {
     });
   }
   render();
+  checkCameraAlerts(snap);
 }
 
 function scheduleMinuteTick() {
@@ -183,14 +192,21 @@ function renderHome({ snap }) {
       h('h2', { class: 'h-card' }, 'Home'),
       h('span', { class: 'muted' }, lights)),
     rows.length > 0 && h('div', { class: 'status-list' }, rows),
-    snap.scenes.length > 0 && h('div', { class: 'scenes' },
-      snap.scenes.map((s) => {
-        const cls = ['scene'];
-        if (s.entity === (state.pendingScene || snap.currentScene)) cls.push('is-current');
-        if (s.entity === state.pendingScene) cls.push('is-pending');
-        if (s.entity === state.sceneError) cls.push('is-error');
-        return h('button', { type: 'button', class: cls.join(' '), onclick: () => activateScene(s.entity) }, s.name);
-      })),
+    h('div', { class: 'controls' },
+      (snap.cameras || []).length > 0 && h('div', { class: 'cams' },
+        snap.cameras.map((c) => h('button', {
+          type: 'button',
+          class: 'scene cam-btn',
+          onclick: () => openCamera(c, null),
+        }, svgIcon(CAMERA_ICON, { size: 20 }), c.name))),
+      snap.scenes.length > 0 && h('div', { class: 'scenes' },
+        snap.scenes.map((s) => {
+          const cls = ['scene'];
+          if (s.entity === (state.pendingScene || snap.currentScene)) cls.push('is-current');
+          if (s.entity === state.pendingScene) cls.push('is-pending');
+          if (s.entity === state.sceneError) cls.push('is-error');
+          return h('button', { type: 'button', class: cls.join(' '), onclick: () => activateScene(s.entity) }, s.name);
+        }))),
   );
 }
 
@@ -209,6 +225,65 @@ function statusRow(name, value, tone) {
     h('span', { class: 'k' }, name),
     h('span', { class: tone }, value));
 }
+
+// ---------- Camera view ----------
+
+/** A trigger (doorbell, person, motion) on a camera pops its view open and wakes the screen. */
+function checkCameraAlerts(snap) {
+  for (const c of snap.cameras || []) {
+    if (!c.alert) continue;
+    const key = `${c.entity}@${c.alert.at}`;
+    if (state.seenAlerts.has(key)) continue;
+    state.seenAlerts.add(key);
+    if (state.display) state.display.wake();
+    openCamera(c, c.alert);
+  }
+}
+
+function openCamera(cam, alert) {
+  closeCamera();
+  const el = $('camera');
+  const img = $('cam-img');
+  $('cam-title').textContent = cam.name;
+  $('cam-sub').textContent = alert ? `${alert.by} · ${fmtTime(new Date(alert.at), state.snap.settings.clock24h)}` : 'Live view';
+  img.alt = `${cam.name} camera`;
+  el.hidden = false;
+
+  const width = Math.min(1920, Math.round(window.innerWidth * (window.devicePixelRatio || 1)));
+  const cur = { entity: cam.entity, refreshTimer: null, closeTimer: null };
+  state.camera = cur;
+
+  // Load each frame off-screen and swap it in, so the view never flashes blank.
+  const load = () => {
+    const next = new Image();
+    next.onload = () => {
+      if (state.camera !== cur) return;
+      img.src = next.src;
+      cur.refreshTimer = setTimeout(load, CAMERA_REFRESH_MS);
+    };
+    next.onerror = () => {
+      if (state.camera !== cur) return;
+      $('cam-sub').textContent = 'Camera unavailable — retrying';
+      cur.refreshTimer = setTimeout(load, CAMERA_REFRESH_MS * 3);
+    };
+    next.src = `api/cameras/${encodeURIComponent(cam.entity)}/snapshot?w=${width}&t=${Date.now()}`;
+  };
+  load();
+  cur.closeTimer = setTimeout(closeCamera, alert ? cam.popupSeconds * 1000 : CAMERA_MANUAL_CLOSE_MS);
+}
+
+function closeCamera() {
+  const cur = state.camera;
+  if (!cur) return;
+  clearTimeout(cur.refreshTimer);
+  clearTimeout(cur.closeTimer);
+  state.camera = null;
+  $('camera').hidden = true;
+  $('cam-img').removeAttribute('src');
+}
+
+$('cam-close').addEventListener('click', closeCamera);
+$('cam-img').addEventListener('click', closeCamera);
 
 async function activateScene(entity) {
   state.pendingScene = entity;
