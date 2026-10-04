@@ -383,11 +383,13 @@ function renderDetail(ctx) {
   const ev = selectedEvent(ctx);
   if (!ev) {
     el.style.removeProperty('--c');
+    el.style.removeProperty('--c-soft');
     replace(el, h('div', { class: 'detail-empty' }, 'Nothing coming up.'));
     return;
   }
   const cal = cals.get(ev.cal);
   el.style.setProperty('--c', cal.color);
+  el.style.setProperty('--c-soft', tint(cal.color, 0.16));
   const notes = ev.busy
     ? 'This calendar is shared as free/busy only, so the dashboard shows the time block without details.'
     : ev.description;
@@ -401,6 +403,13 @@ function renderDetail(ctx) {
       h('span', { class: 'eyebrow' }, 'Notes'),
       h('span', { class: 'detail-notes' }, notes)),
   );
+}
+
+/** "#FF9A5C" → "rgba(255, 154, 92, 0.16)". Done in JS because color-mix() is too new for older WebViews. */
+function tint(hex, alpha) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  if (!m) return 'transparent';
+  return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${alpha})`;
 }
 
 function headsUpItems({ snap, now }) {

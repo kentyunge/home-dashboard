@@ -153,9 +153,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .ev.is-now .rel { color: var(--amber); }
 .agenda-empty { padding: 24px 12px; color: var(--muted); font-size: 17px; }
 
-.detail { flex: 1; min-height: 0; padding: 22px; gap: 16px; border-radius: 22px; border-top: 6px solid var(--c, var(--line)); overflow: hidden; }
-.detail-cal { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--c); }
-.detail-cal .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.detail { flex: 1; min-height: 0; padding: 22px; gap: 16px; border-radius: 22px; overflow: hidden; }
+.detail-cal {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--c-soft); color: var(--c); font-size: 14px;
+}
+.detail-cal .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
 .detail-title { font-family: var(--display); font-size: 30px; font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
 .detail-when { display: flex; flex-direction: column; gap: 6px; font-size: 17px; }
 .detail-when .where { color: var(--text-2); }
