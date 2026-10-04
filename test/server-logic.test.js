@@ -191,3 +191,13 @@ test('applianceStatus: shows only running appliances', () => {
     { name: 'Oven', finishesAt: null },
   ]);
 });
+
+test('applianceStatus: raw idle values (LG ThinQ power_off etc.) are not running', () => {
+  const now = new Date('2026-10-03T14:00:00Z');
+  for (const raw of ['power_off', 'Power Off', 'initial', 'end', 'standby', 'wrinkle_off']) {
+    const st = new Map([['sensor.dryer_current_status', { state: raw }]]);
+    assert.deepEqual(applianceStatus([{ name: 'Dryer', state: 'sensor.dryer_current_status', remaining: null }], st, now), [], raw);
+  }
+  const running = new Map([['sensor.dryer_current_status', { state: 'running' }]]);
+  assert.equal(applianceStatus([{ name: 'Dryer', state: 'sensor.dryer_current_status', remaining: null }], running, now).length, 1);
+});

@@ -139,3 +139,12 @@ test('camera triggers: binary_sensor turning on and new event.* raise an alert; 
   assert.equal(alert().by, 'Doorbell');
   store.stop();
 });
+
+test('config: appliances accept "status" as an alias for "state"', async () => {
+  const { writeFileSync, mkdtempSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const { tmpdir } = await import('node:os');
+  const p = join(mkdtempSync(join(tmpdir(), 'dash-')), 'c.json');
+  writeFileSync(p, JSON.stringify({ appliances: [{ name: 'Dryer', status: 'sensor.dryer_current_status' }] }));
+  assert.equal(loadConfig({ MOCK: '1', CONFIG_PATH: p }).appliances[0].state, 'sensor.dryer_current_status');
+});

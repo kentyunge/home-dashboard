@@ -79,7 +79,7 @@ export function loadConfig(env = process.env) {
     })),
     appliances: (file.appliances || []).map((a) => ({
       name: required(a.name, 'appliances[].name'),
-      state: a.state || null,
+      state: a.state || a.status || null, // "status" accepted as an alias
       runningStates: a.runningStates ? [].concat(a.runningStates) : null,
       remaining: a.remaining || null,
     })),

@@ -82,8 +82,15 @@ export function sceneList(scenes, states) {
 }
 
 // States that mean "not running" across the common washer/dryer integrations.
-const IDLE_STATES = ['off', 'idle', 'stop', 'stopped', 'end', 'finished', 'finish', 'complete', 'completed',
-  'ready', 'standby', 'none', 'pause', 'paused', 'unavailable', 'unknown', '0', 'false'];
+// Integrations store raw values (LG ThinQ: power_off, initial, end…) that HA's UI translates ("Off").
+const IDLE_STATES = ['off', 'power_off', 'poweroff', 'idle', 'initial', 'stop', 'stopped', 'end', 'finished', 'finish',
+  'complete', 'completed', 'ready', 'standby', 'sleep', 'none', 'pause', 'paused', 'error', 'reserved', 'reservation',
+  'unavailable', 'unknown', '0', 'false'];
+
+function isIdle(state) {
+  const v = String(state).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return IDLE_STATES.includes(v) || v.endsWith('_off');
+}
 
 /**
  * Appliances that are running right now, with when they'll finish.
@@ -104,7 +111,7 @@ export function applianceStatus(appliances, states, now = new Date()) {
     let running;
     if (st) {
       const v = String(st.state).toLowerCase();
-      running = a.runningStates ? a.runningStates.map((x) => String(x).toLowerCase()).includes(v) : !IDLE_STATES.includes(v);
+      running = a.runningStates ? a.runningStates.map((x) => String(x).toLowerCase()).includes(v) : !isIdle(v);
     } else {
       running = !!finishesAt && finishesAt > now;
     }
