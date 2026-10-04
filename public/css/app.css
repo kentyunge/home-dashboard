@@ -171,6 +171,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .headsup { gap: 10px; }
 .headsup .row { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
 .headsup .row .when { color: var(--muted); white-space: nowrap; }
+.headsup .row .task-done { color: #4FD1B5; white-space: nowrap; }
+.headsup .row .task-todo { color: var(--amber-text); white-space: nowrap; }
 
 /* ---------- Night / ambient view ---------- */
 .night {

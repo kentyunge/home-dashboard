@@ -72,6 +72,7 @@ export class MockHomeAssistant {
       if (a.state) set(a.state, 'run');
       if (a.remaining) set(a.remaining, '23', { unit_of_measurement: 'min', device_class: 'duration' });
     }
+    for (const t of this.config.tasks) if (!this.states.has(t.entity)) set(t.entity, 'off');
     if (this.config.climate) {
       set(this.config.climate.entity, 'heat', { current_temperature: 68, temperature: 70, hvac_action: 'heating' });
     }

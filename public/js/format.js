@@ -137,6 +137,23 @@ export function agendaEvents(events, calendars, hidden) {
   return events.filter((e) => shown.has(e.cal));
 }
 
+const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+/**
+ * Weekly tasks due right now: today is one of the task's days (none listed =
+ * every day) and the time is within [from, until).
+ */
+export function dueTasks(tasks, now) {
+  const today = DAY_CODES[now.getDay()];
+  const mins = now.getHours() * 60 + now.getMinutes();
+  const toMins = (hhmm) => {
+    const [h, m] = String(hhmm).split(':').map(Number);
+    return h * 60 + (m || 0);
+  };
+  return (tasks || []).filter((t) => (!t.days.length || t.days.includes(today))
+    && mins >= toMins(t.from) && mins < toMins(t.until));
+}
+
 /** Start-time column in the agenda: "10:30 AM", "All day", or "Until 3 PM" for something already running. */
 export function agendaTime(ev, day, h24) {
   if (ev.allDay) return 'All day';

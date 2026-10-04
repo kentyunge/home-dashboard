@@ -148,3 +148,14 @@ test('config: appliances accept "status" as an alias for "state"', async () => {
   writeFileSync(p, JSON.stringify({ appliances: [{ name: 'Dryer', status: 'sensor.dryer_current_status' }] }));
   assert.equal(loadConfig({ MOCK: '1', CONFIG_PATH: p }).appliances[0].state, 'sensor.dryer_current_status');
 });
+
+test('tasks: done follows the entity state; days normalised', () => {
+  const config = loadConfig({ MOCK: '1' });
+  assert.deepEqual(config.tasks[0].days, ['wed']);
+  const store = new Store(config, new MockHomeAssistant(config), { log: quiet });
+  store.handleState('input_boolean.bins_at_curb', { state: 'off' });
+  assert.equal(store.snapshot().tasks[0].done, false);
+  store.handleState('input_boolean.bins_at_curb', { state: 'on' });
+  assert.equal(store.snapshot().tasks[0].done, true);
+  store.stop();
+});

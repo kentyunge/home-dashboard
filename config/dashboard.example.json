@@ -34,6 +34,10 @@
     { "entity": "camera.east_garage_high_resolution_channel", "name": "East garage", "triggers": [] }
   ],
 
+  "tasks": [
+    { "name": "Bins to the curb", "entity": "input_boolean.bins_at_curb", "days": ["wed"], "from": "06:00", "until": "18:00" }
+  ],
+
   "appliances": [
     { "name": "Dryer", "state": "sensor.dryer_machine_state", "remaining": "sensor.dryer_remaining_time" }
   ],

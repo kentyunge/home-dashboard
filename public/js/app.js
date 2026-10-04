@@ -2,7 +2,7 @@ import { h, replace, svgIcon } from './dom.js';
 import { weatherIcon } from './icons.js';
 import { createDisplay } from './display.js';
 import {
-  addDays, agendaEvents, agendaTime, clockParts, dayName, eventEnd, eventStart, fmtDateLong, fmtHour, fmtRange,
+  addDays, agendaEvents, agendaTime, dueTasks, clockParts, dayName, eventEnd, eventStart, fmtDateLong, fmtHour, fmtRange,
   fmtTime, fmtTimeShort, groupByDay, headsUpWhen, nextEvent, relLabel, startOfDay, whenLabel,
 } from './format.js';
 
@@ -422,11 +422,15 @@ function headsUpItems({ snap, now }) {
 
 function renderHeadsUp(ctx) {
   const items = headsUpItems(ctx);
+  const tasks = dueTasks(ctx.snap.tasks, ctx.now);
   const el = $('headsup');
-  el.hidden = !items.length;
-  if (!items.length) return;
+  el.hidden = !items.length && !tasks.length;
+  if (el.hidden) return;
   replace(el,
     h('h2', { class: 'h-card' }, 'Heads up'),
+    tasks.map((t) => h('div', { class: 'row' },
+      h('span', null, t.name),
+      h('span', { class: t.done ? 'task-done' : 'task-todo' }, t.done ? 'Done ✓' : 'Not yet'))),
     items.map((e) => h('div', { class: 'row' },
       h('span', null, e.title),
       h('span', { class: 'when' }, headsUpWhen(e, ctx.now)))));
@@ -448,9 +452,11 @@ function renderNight(ctx) {
       : h('span', null, 'Nothing scheduled'));
 
   const hu = headsUpItems(ctx)[0];
+  const task = dueTasks(snap.tasks, now).sort((a, b) => a.done - b.done)[0]; // unfinished first
   const midCol = h('div', null,
     h('span', { class: 'eyebrow' }, 'Heads up'),
-    hu ? [h('span', { class: 'warn' }, hu.title), h('span', null, headsUpWhen(hu, now))]
+    task ? [h('span', { class: task.done ? 'hl' : 'warn' }, task.name), h('span', null, task.done ? 'Done ✓' : 'Not done yet')]
+    : hu ? [h('span', { class: 'warn' }, hu.title), h('span', null, headsUpWhen(hu, now))]
       : w && w.headsUp ? h('span', { class: 'warn' }, weatherHeadsUpText(w.headsUp, h24))
         : h('span', null, 'Nothing tonight'));
 

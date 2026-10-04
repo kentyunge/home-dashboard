@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  agendaEvents, agendaTime, clockParts, groupByDay, nextEvent, relLabel, whenLabel, fmtHour, fmtTimeShort,
+  agendaEvents, agendaTime, clockParts, dueTasks, groupByDay, nextEvent, relLabel, whenLabel, fmtHour, fmtTimeShort,
 } from '../public/js/format.js';
 import { inWindow } from '../public/js/display.js';
 
@@ -90,4 +90,17 @@ test('agendaEvents leaves out heads-up calendars and hidden ones', () => {
   const events = [{ id: 'a', cal: 'calendar.family' }, { id: 'b', cal: 'calendar.bins' }, { id: 'c', cal: 'calendar.work' }, { id: 'd', cal: 'calendar.gone' }];
   assert.deepEqual(agendaEvents(events, cals, new Set()).map((e) => e.id), ['a', 'c']);
   assert.deepEqual(agendaEvents(events, cals, new Set(['calendar.work'])).map((e) => e.id), ['a']);
+});
+
+test('dueTasks: only on listed days, within the time window', () => {
+  const tasks = [
+    { name: 'Bins', days: ['wed'], from: '06:00', until: '18:00', done: false },
+    { name: 'Daily', days: [], from: '00:00', until: '24:00', done: true },
+  ];
+  // Oct 7 2026 is a Wednesday, Oct 4 a Sunday
+  assert.deepEqual(dueTasks(tasks, new Date(2026, 9, 7, 8, 0)).map((t) => t.name), ['Bins', 'Daily']);
+  assert.deepEqual(dueTasks(tasks, new Date(2026, 9, 7, 5, 59)).map((t) => t.name), ['Daily']);
+  assert.deepEqual(dueTasks(tasks, new Date(2026, 9, 7, 18, 0)).map((t) => t.name), ['Daily']);
+  assert.deepEqual(dueTasks(tasks, new Date(2026, 9, 4, 9, 0)).map((t) => t.name), ['Daily']);
+  assert.deepEqual(dueTasks(undefined, new Date()), []);
 });
