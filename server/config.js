@@ -89,6 +89,13 @@ export function loadConfig(env = process.env) {
       triggers: [].concat(c.triggers || []),
       popupSeconds: clampInt(c.popupSeconds, 10, 600, 60),
     })),
+    tasks: (file.tasks || []).map((t) => ({
+      name: required(t.name, 'tasks[].name'),
+      entity: required(t.entity, 'tasks[].entity'),
+      days: [].concat(t.days || []).map((d) => String(d).slice(0, 3).toLowerCase()),
+      from: t.from || '00:00',
+      until: t.until || '24:00',
+    })),
     climate: file.climate && file.climate.entity
       ? { entity: file.climate.entity, name: file.climate.name || 'Thermostat' }
       : null,

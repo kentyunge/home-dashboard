@@ -13,6 +13,11 @@ const POLL_STATES_MS = 30e3; // only while the WebSocket isn't delivering live u
  * tablet renders. Live entity states arrive over the WebSocket; calendars
  * and forecasts are polled because HA doesn't push them.
  */
+const DONE_STATES = ['on', 'true', 'done', 'completed', 'yes'];
+function isDone(st) {
+  return !!st && DONE_STATES.includes(String(st.state).toLowerCase());
+}
+
 export class Store {
   constructor(config, source, { log = console, now = () => new Date() } = {}) {
     this.config = config;
@@ -41,6 +46,7 @@ export class Store {
       ...(config.climate ? [config.climate.entity] : []),
       ...config.appliances.flatMap((a) => [a.state, a.remaining].filter(Boolean)),
       ...config.cameras.flatMap((c) => c.triggers),
+      ...config.tasks.map((t) => t.entity),
       ...(config.lights || []),
     ]);
   }
@@ -222,6 +228,11 @@ export class Store {
       houseTotal: c.house.length,
       climate: climateSummary(c.climate, this.states),
       appliances: applianceStatus(c.appliances, this.states, now),
+      // The tablet decides which tasks are due right now (its own clock and time zone).
+      tasks: c.tasks.map((t) => ({
+        name: t.name, days: t.days, from: t.from, until: t.until,
+        done: isDone(this.states.get(t.entity)),
+      })),
       cameras: c.cameras.map((cam) => {
         const alert = this.cameraAlerts.get(cam.entity);
         const fresh = alert && now - new Date(alert.at) < cam.popupSeconds * 1000;
