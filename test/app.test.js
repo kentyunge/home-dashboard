@@ -108,3 +108,34 @@ test('ACCESS_KEY gate: 401, then ?key sets a cookie', async () => {
 test('config: HA_URL without HA_TOKEN is an error', () => {
   assert.throws(() => loadConfig({ HA_URL: 'http://ha:8123', CONFIG_PATH: 'config/dashboard.example.json' }), /HA_TOKEN/);
 });
+
+test('camera snapshot: configured camera only', async () => {
+  let res = await fetch(`${s.base}/api/cameras/camera.east_garage_high_resolution_channel/snapshot?w=800`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /^image\//);
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  res = await fetch(`${s.base}/api/cameras/camera.not_configured/snapshot`);
+  assert.equal(res.status, 404);
+});
+
+test('camera triggers: binary_sensor turning on and new event.* raise an alert; reloads do not', () => {
+  const config = loadConfig({ MOCK: '1' });
+  config.cameras = [{ entity: 'camera.east', name: 'East', triggers: ['binary_sensor.east_person', 'event.east_doorbell'], popupSeconds: 60 }];
+  let t = new Date('2026-10-04T12:00:00Z');
+  const store = new Store(config, new MockHomeAssistant(config), { log: quiet, now: () => new Date(t) });
+  const alert = () => store.snapshot().cameras[0].alert;
+
+  store.handleState('binary_sensor.east_person', { state: 'off', attributes: {} });
+  assert.equal(alert(), null);
+  store.handleState('binary_sensor.east_person', { state: 'on', attributes: { friendly_name: 'East person detected' } });
+  assert.equal(alert().by, 'East person detected');
+
+  t = new Date('2026-10-04T12:02:00Z'); // past popupSeconds
+  assert.equal(alert(), null);
+
+  store.handleState('event.east_doorbell', { state: '2026-10-04T11:00:00Z', attributes: {} }); // first sighting: no alert
+  assert.equal(alert(), null);
+  store.handleState('event.east_doorbell', { state: '2026-10-04T12:02:00Z', attributes: { friendly_name: 'Doorbell' } });
+  assert.equal(alert().by, 'Doorbell');
+  store.stop();
+});

@@ -91,7 +91,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .status-row .warn { color: var(--amber-text); }
 .status-row .ok { color: var(--text); }
 .status-row .run { color: #4FD1B5; }
-.scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto; }
+.controls { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+.scenes, .cams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cam-btn { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .scene {
   min-height: 52px;
   border-radius: 12px;
@@ -193,3 +195,19 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   font-size: 12px; line-height: 18px;
 }
 body.is-night .status { background: transparent; color: var(--night-muted); }
+
+/* ---------- Camera view ---------- */
+.cam-overlay {
+  position: fixed; inset: 0; z-index: 10;
+  background: var(--night);
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.cam-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.cam-titles { display: flex; align-items: baseline; gap: 14px; }
+.cam-close {
+  min-height: 52px; min-width: 120px; padding: 0 20px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--raised);
+  font-size: 18px; cursor: pointer;
+}
+.cam-img { flex: 1; min-height: 0; width: 100%; object-fit: contain; border-radius: 12px; background: #000; }

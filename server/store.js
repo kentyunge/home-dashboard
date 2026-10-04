@@ -31,6 +31,7 @@ export class Store {
     this.emitTimer = null;
     this.timers = [];
     this.version = String(Date.now());
+    this.cameraAlerts = new Map(); // camera entity -> { at, by }
 
     this.watched = new Set([
       ...config.calendars.map((c) => c.entity),
@@ -39,6 +40,7 @@ export class Store {
       ...(config.weather ? [config.weather.entity] : []),
       ...(config.climate ? [config.climate.entity] : []),
       ...config.appliances.flatMap((a) => [a.state, a.remaining].filter(Boolean)),
+      ...config.cameras.flatMap((c) => c.triggers),
       ...(config.lights || []),
     ]);
   }
@@ -70,6 +72,7 @@ export class Store {
 
   handleState(id, st) {
     if (!this.isRelevant(id)) return;
+    this.checkCameraTrigger(id, this.states.get(id), st);
     if (st) this.states.set(id, st);
     else this.states.delete(id);
     this.lastUpdate = this.now();
@@ -81,6 +84,32 @@ export class Store {
       this.refreshForecast();
     }
     this.scheduleEmit();
+  }
+
+  /**
+   * A trigger fires when a binary_sensor turns on, or an event.* entity
+   * records a new event (its state is the event's timestamp). Bulk state
+   * reloads don't go through here, so a reconnect never pops the camera up.
+   */
+  checkCameraTrigger(id, prev, next) {
+    if (!next) return;
+    const fired = id.startsWith('event.')
+      ? !!prev && next.state !== prev.state && next.state !== 'unavailable' && next.state !== 'unknown'
+      : next.state === 'on' && (!prev || prev.state !== 'on');
+    if (!fired) return;
+    const by = (next.attributes && next.attributes.friendly_name) || id;
+    for (const cam of this.config.cameras) {
+      if (cam.triggers.includes(id)) this.cameraAlerts.set(cam.entity, { at: this.now().toISOString(), by });
+    }
+  }
+
+  async cameraSnapshot(entity, width) {
+    if (!this.config.cameras.some((c) => c.entity === entity)) {
+      const err = new Error('Unknown camera');
+      err.status = 404;
+      throw err;
+    }
+    return this.source.cameraSnapshot(entity, width);
   }
 
   async refreshStates() {
@@ -193,6 +222,11 @@ export class Store {
       houseTotal: c.house.length,
       climate: climateSummary(c.climate, this.states),
       appliances: applianceStatus(c.appliances, this.states, now),
+      cameras: c.cameras.map((cam) => {
+        const alert = this.cameraAlerts.get(cam.entity);
+        const fresh = alert && now - new Date(alert.at) < cam.popupSeconds * 1000;
+        return { entity: cam.entity, name: cam.name, popupSeconds: cam.popupSeconds, alert: fresh ? alert : null };
+      }),
     };
   }
 }

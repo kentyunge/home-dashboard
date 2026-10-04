@@ -142,6 +142,16 @@ export class MockHomeAssistant {
     });
   }
 
+  async cameraSnapshot(entity) {
+    const cam = this.config.cameras.find((c) => c.entity === entity);
+    const t = this.now().toLocaleTimeString();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">`
+      + `<rect width="1280" height="720" fill="#1E252E"/><rect x="0" y="480" width="1280" height="240" fill="#2A323D"/>`
+      + `<text x="40" y="70" fill="#E7EAEE" font-family="sans-serif" font-size="40">${cam ? cam.name : entity} (demo)</text>`
+      + `<text x="40" y="680" fill="#9AA4B1" font-family="sans-serif" font-size="32">${t}</text></svg>`;
+    return { type: 'image/svg+xml', body: Buffer.from(svg) };
+  }
+
   async turnOnScene(entity) {
     const now = this.now().toISOString();
     this.update(entity, now);
