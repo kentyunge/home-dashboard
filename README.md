@@ -23,7 +23,7 @@ Design mockups: https://claude.ai/code/artifact/ac29bb15-b397-4890-b2bc-3725fca7
 | Weather | Current conditions, high/low, five hourly temps, and a one-line heads-up (rain, snow or storms in the next 12 h, otherwise a freeze). |
 | Light scenes | Big buttons, "N of M lights on", and the last-activated scene highlighted. |
 | House at a glance | Lists only what's off-normal (unlocked, open, offline), plus the thermostat. |
-| Heads up | Upcoming items (next 4 days) from calendars marked `"headsUp": true`, e.g. bins. |
+| Heads up | Upcoming items (next 4 days) from calendars marked `"headsUp": true`, e.g. bins. Those calendars appear only here, not in the week agenda or filter chips. |
 | Night / idle | Night window → dim ambient clock view; touch or motion wakes it for `wakeMinutes`. During the day, after `idleMinutes` the view resets to the next event. Brightness is set through Fully Kiosk. Pixel shift every hour. |
 | Cameras | Tap a camera button for a near-live view (stills every 2 s, scaled by HA). Optional triggers (doorbell, person, motion) pop the view open and wake the screen, even at night. |
 | Resilience | Keeps the last good data if HA or a calendar fails, shows a small "Reconnecting" / "Home Assistant offline" pill, and reloads itself when the server is redeployed. |
@@ -64,7 +64,7 @@ Testing switches:
 
 **Household config:** copy `config/dashboard.example.json` to `config/dashboard.json` and fill in your entity IDs:
 
-- `calendars[]`: `entity`, `name`, `color`, optional `busyOnly`, `headsUp`
+- `calendars[]`: `entity`, `name`, `color`, optional `busyOnly`, `headsUp` (shown only in the Heads up card, not the agenda)
 - `weather.entity`
 - `scenes[]`: `entity` (must be `scene.*`), `name`
 - `lights`: `null` counts every `light.*` entity (light groups are skipped); or give an explicit list, which may include `switch.*` entities for smart wall switches

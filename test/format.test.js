@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  agendaTime, clockParts, groupByDay, nextEvent, relLabel, whenLabel, fmtHour, fmtTimeShort,
+  agendaEvents, agendaTime, clockParts, groupByDay, nextEvent, relLabel, whenLabel, fmtHour, fmtTimeShort,
 } from '../public/js/format.js';
 import { inWindow } from '../public/js/display.js';
 
@@ -83,4 +83,11 @@ test('inWindow handles windows across midnight', () => {
   assert.equal(inWindow(at(3, 6, 30), '22:00', '06:30'), false);
   assert.equal(inWindow(at(3, 12), '22:00', '06:30'), false);
   assert.equal(inWindow(at(3, 13), '12:00', '14:00'), true);
+});
+
+test('agendaEvents leaves out heads-up calendars and hidden ones', () => {
+  const cals = [{ id: 'calendar.family' }, { id: 'calendar.bins', headsUp: true }, { id: 'calendar.work' }];
+  const events = [{ id: 'a', cal: 'calendar.family' }, { id: 'b', cal: 'calendar.bins' }, { id: 'c', cal: 'calendar.work' }, { id: 'd', cal: 'calendar.gone' }];
+  assert.deepEqual(agendaEvents(events, cals, new Set()).map((e) => e.id), ['a', 'c']);
+  assert.deepEqual(agendaEvents(events, cals, new Set(['calendar.work'])).map((e) => e.id), ['a']);
 });
